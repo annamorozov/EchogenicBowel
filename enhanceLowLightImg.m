@@ -14,10 +14,6 @@ imgInv_woHaze = imreducehaze(imgInv,'Method','approx','ContrastEnhancement','boo
 imgCompl = imcomplement(imgInv_woHaze);
 
 % Remove noise from the enhanced image, preserve edges
-
-% Low-light images can have high noise levels. Enhancing low-light images can increase this noise level. Denoising can be a useful post-processing step.
-% filters input image A under self-guidance, using A itself as the guidance image. This can be used for edge-preserving smoothing of image A.
-
 imgEnh = imguidedfilter(imgCompl);
 
 %% Display

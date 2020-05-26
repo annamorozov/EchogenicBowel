@@ -14,6 +14,11 @@ function grade = gradeBowel(imgOrig, bw_bowelMask, bw_periphBonesMask,...
 % intensity is computed and compared to the segments within the whole range. 
 % The grade is deduced according to the closest segment to the bowel mean
 % intensity. 
+% Extreme cases: if most (more than a defined threshold) of the area inside
+% the bowel boundary is segmented as bones, grade "6" will be assigned. 
+% If most of the area inside the bowel boundary is segmented as fluids (dark holes),
+% the assigned grade will be "0". The default area threshold is 0.5;
+%
 % Input:  imgOrig                 - the original image
 %         bw_bowelMask            - bowel mask
 %         bw_periphBonesMask      - mask of the bones on the periphery:
@@ -34,10 +39,10 @@ imgOrig = rgb2gray(imgOrig);
 imageOrig_gauss = imgaussfilt(imgOrig, 1);
 imageOrig_gauss = imadjust(imageOrig_gauss);
 
-% Weighted mean (\median) of all the dark background pixels
+% Weighted mean of all the dark background pixels
 wMeanIntens_darkBckgr = getMaskRegionProps(imageOrig_gauss, ~bw_darkBackgroundMask);
 
-% Weighted mean (\median) of all the bones (bright areas) on the periphery
+% Weighted mean of all the bones (bright areas) on the periphery
 % (within the abdomen circle but outside the bowel bound)
 wMeanIntens_periphBones = getMaskRegionProps(imageOrig_gauss, bw_periphBonesMask);
 
@@ -45,11 +50,20 @@ wMeanIntens_periphBones = getMaskRegionProps(imageOrig_gauss, bw_periphBonesMask
 % the black holes
 bw_bowelOnlyMask = bw_bowelMask & (~bw_maskBones_allAbdomen) & (~bw_BowelBlackHoles_mask);
 
-% Weighted mean (\median) of all the pixels in the "clean" bowel
-wMeanIntens_onlyBowel = getMaskRegionProps(imageOrig_gauss, bw_bowelOnlyMask);
+% Weighted mean of all the pixels in the "clean" bowel
+[wMeanIntens_onlyBowel] = getMaskRegionProps(imageOrig_gauss, bw_bowelOnlyMask);
 
-%TODO: consider area constraints
+% For extreme cases
+% Area inside the bowel bound
+[~, ~, allBowelArea] = getMaskRegionProps(imageOrig_gauss, bw_bowelMask);
 
+% Only dark holes within the bowel
+[~, ~, bowelHolesArea] = getMaskRegionProps(imageOrig_gauss, bw_BowelBlackHoles_mask);
+
+% Only bones within the bowel
+bw_bowelBones_mask = bw_bowelMask & bw_maskBones_allAbdomen;
+[~, ~, bonesBowelArea] = getMaskRegionProps(imageOrig_gauss, bw_bowelBones_mask);
+    
 % The range between the mean maximum reference-intensity (bones on the
 % periphery: within the abdomen but outside the bowel outline), and the 
 % mean minimum reference-intensity (the dark background as amniotic fluid)
@@ -65,10 +79,24 @@ for i=2:length(segMeans)
 end
 
 % Find the segment with the closest mean
-[~, closestIndex] = min(abs(segMeans - wMeanIntens_onlyBowel));
+[~, closestIndex] = min(abs(segMeans - double(wMeanIntens_onlyBowel)));
 closestValue = segMeans(closestIndex);
 
 grade = closestIndex-1;
+
+% Threshold for extreme cases
+bowelThresh = 0.5; 
+bowelAreaThres = allBowelArea*bowelThresh;
+
+% Most (more than the threshold) of the bowel area is segmented as bones
+if bonesBowelArea > bowelAreaThres
+    grade = 6;
+end
+
+% Most (more than the threshold) of the bowel area is segmented as fluid (dark holes)
+if bowelHolesArea > bowelAreaThres
+    grade = 0;
+end
 
 %% Display
 if isShow

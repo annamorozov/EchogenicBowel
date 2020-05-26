@@ -3,17 +3,18 @@ close all;
 
 %% Set up parameters
 % Input images folder
-inputDataDir = 'D:\SAMPL_Lab\Data\input_data'; 
+inputDataDir = 'D:\input_data';
 
  % Show preliminary images for debugging 
 isShow = true;
 
 %% Run the algorithm
+gradesTbl = []; % final output
+
 % Get the images full paths
 filesPaths = getFilesList(inputDataDir);
 
 grades = zeros(length(filesPaths), 1);
-gradesTbl = [];
 
 for i=1:length(filesPaths)
     imgOrig = imread(filesPaths{i});
