@@ -33,9 +33,13 @@ function grade = gradeBowel(imgOrig, bw_bowelMask, bw_periphBonesMask,...
 % Output: grade                   - number 0-6 (0 - dark as amniotic fluid, 
 %                                   6 - bright as the bones)       
 
+%TODO: some code duplicated in getPropsForGrading
+
 
 % Gauss filtering and contrast adjustment of the whole original image
 imgOrig = rgb2gray(imgOrig);
+%imgOrig = rescale(imgOrig);
+
 imageOrig_gauss = imgaussfilt(imgOrig, 1);
 imageOrig_gauss = imadjust(imageOrig_gauss);
 
