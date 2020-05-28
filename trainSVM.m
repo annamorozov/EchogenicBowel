@@ -71,7 +71,8 @@ for i=1:length(classifPerf_oneVsAll)
     ErrorRate         = [ErrorRate; cp.ErrorRate]; 
 end
 
-perfTbl = table(targetClasses, controlClasses', Sensitivity, Specificity,...
+controlClasses = controlClasses';
+perfTbl = table(targetClasses, controlClasses, Sensitivity, Specificity,...
     CorrectRate, ErrorRate);
 
 meanSensitivity = mean(perfTbl.Sensitivity);
